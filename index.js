@@ -14,27 +14,27 @@ const movies = require('./db/movies.js')
 
 //middleware comes between request and response meaning of our request comes within or through the middleware
 //are always inside app.use 
-const logger = (req, res, next) => {
-    console.log({
-        url: req.url,
-        method: req.method,
-        time: new Date().getFullYear()
-    })
-    next()
-}
+// const logger = (req, res, next) => {
+//     console.log({
+//         url: req.url,
+//         method: req.method,
+//         time: new Date().getFullYear()
+//     })
+//     next()
+// }
 
 //middleware in express don't need the next keyword
 // middleware below return middleware that passes json as data
-app.use(logger)
+// app.use(logger)
 app.use(express.json())
 
 
 
 
-const auth = (req, res, next) => {
-    console.log('authorized to visit the api')
-    next()
-}
+// const auth = (req, res, next) => {
+//     console.log('authorized to visit the api')
+//     next()
+// }
 
 
 
@@ -51,7 +51,7 @@ app.get('/', (req, res) => {
     res.send('home page')
 })
 
-app.get('/about', auth, (req, res) => {
+app.get('/about', (req, res) => {
     res.send('about page')
 })
 
@@ -59,11 +59,11 @@ app.get('/about-us', (req, res) => {
     res.redirect('/about')
 })
 
-app.get('/api/movies', auth, (req, res) => {
+app.get('/api/movies', (req, res) => {
     res.status(200).json({ numofmovies: movies.length, movies })
 })
 
-app.get('/api/movies/:movieId', auth, (req, res) => {
+app.get('/api/movies/:movieId', (req, res) => {
     //req.params
     // console.log(req.params)
     const { movieId } = req.params
@@ -77,6 +77,46 @@ app.get('/api/movies/:movieId', auth, (req, res) => {
     res.status(200).json({ movie })
 })
 
+// insert data, user is expected to provide a data
+
+app.post('/api/movies', (req, res) => {
+    // console.log(req.body);
+    const { title } = req.body
+    if (!title) {
+        return res.status(401).json({ msg: 'please provide necessary information' })
+    }
+    const newMovie = { id: 6, title }
+    // res.send(req.body)
+    res.status(201).json({ ...movies, newMovie })
+})
+
+// patch is already existing information the user wants to update 
+app.patch('/api/movie/:movieId', (req, res) => {
+    const { movieId } = req.params
+    const { title } = req.body
+    const updatedMovies = movies.filter((movie) => {
+        if (movie.id === parseInt(movieId)) {
+            movie.title = title
+        }
+        return movie
+
+    });
+    res.status(200).json({ msg: updatedMovies })
+
+})
+
+// delete 
+app.delete('/api/movie/:movieId', (req, res) => {
+    const { movieId } = req.params
+    const remainigMovies = movies.filter((movie) => {
+        return movie.id !== parseInt(movieId)
+    })
+    res.status(200).json({ movies: remainigMovies })
+})
+
+
+// CRUD operation 
+// create, read, update and delete 
 app.all(/.*/, (req, res) => {
     res.status(404).send('error page');
 });
